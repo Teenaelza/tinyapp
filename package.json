@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Teenaelza/tinyapp/issues"
   },
-  "homepage": "https://github.com/Teenaelza/tinyapp#readme"
+  "homepage": "https://github.com/Teenaelza/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
