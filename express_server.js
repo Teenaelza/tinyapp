@@ -11,6 +11,13 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 app.use(bodyParser.urlencoded({ extended: true }));
+const generateRandomString = () => {};
+app.get("/u/:shortURL", (req, res) => {
+  const short = req.params.shortURL;
+  const longURL = urlDatabase[short];
+  res.redirect(longURL);
+});
+
 //welcome page
 app.get("/", (req, res) => {
   res.send("Welcome");
