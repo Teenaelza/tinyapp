@@ -18,11 +18,16 @@ app.get("/hello", (req, res) => {
   const templateVars = { greeting: "Hello World!" };
   res.render("hello_world", templateVars);
 });
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
 //url index page : directs to the url-index template page
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+//it will display the long url corresponding to the short url parameter that is send via request
 app.get("/urls/:shortURL", (req, res) => {
   const short = req.params.shortURL;
   const templateVars = { shortURL: short, longURL: urlDatabase[short] };
