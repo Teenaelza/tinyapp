@@ -2,6 +2,7 @@
  * Seting up the server for the Tiny app project
  */
 const express = require("express");
+const bodyParser = require("body-parser");
 const PORT = "3000";
 const app = express();
 app.set("view engine", "ejs");
@@ -9,6 +10,7 @@ const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
+app.use(bodyParser.urlencoded({ extended: true }));
 //welcome page
 app.get("/", (req, res) => {
   res.send("Welcome");
@@ -37,5 +39,8 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+});
 app.listen(PORT, () => console.log(`This server is listening to ${PORT}!`));
