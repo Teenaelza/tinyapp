@@ -85,4 +85,11 @@ app.post("/login", (req, res) => {
   console.log(`set cookie to ${cookieValue}`);
   res.redirect("/urls");
 });
+app.post("/logout", (req, res) => {
+  //console.log(req.body.username);
+  //const cookieValue = req.body.username;
+  res.clearCookie("username");
+  console.log(`reset cookie`);
+  res.redirect("/urls");
+});
 app.listen(PORT, () => console.log(`This server is listening to ${PORT}!`));
