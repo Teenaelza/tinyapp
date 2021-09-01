@@ -40,6 +40,10 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { username: req.cookies["username"] };
   res.render("urls_new", templateVars);
 });
+app.get("/register", (req, res) => {
+  const templateVars = { username: undefined };
+  res.render("urls-registration", templateVars);
+});
 //it will display the long url corresponding to the short url parameter that is send via request
 app.get("/urls/:shortURL", (req, res) => {
   const short = req.params.shortURL;
