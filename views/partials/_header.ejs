@@ -19,10 +19,10 @@
       </div>
     </div>
     <div class="form-group mb-2">
-      <% if(username){%>
+      <% if(user){%>
       <div class="card-body">
         <form class="form-inline" method="POST" action="/logout">
-          <h6>Logged in As : <%= username %>&nbsp&nbsp</h6>
+          <h6>Logged in As : <%= user.email %>&nbsp&nbsp</h6>
 
           <button type="submit" class="btn-outline-success">Logout</button>
         </form>
