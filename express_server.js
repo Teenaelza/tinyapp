@@ -11,11 +11,20 @@ const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
-const generateRandomString = () => {
-  return Math.random()
-    .toString(36)
-    .replace(/[^a-z]+/g, "")
-    .substr(0, 6);
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+const generateRandomString = (length) => {
+  return Math.random().toString(36).substr(2, length);
 };
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -31,7 +40,8 @@ app.get("/urls", (req, res) => {
     urls: urlDatabase,
   };
   if (req.cookies) {
-    templateVars["username"] = req.cookies["username"];
+    const userIdKey = req.cookies["user_id"];
+    templateVars["user"] = users[userIdKey];
   }
   res.render("urls_index", templateVars);
 });
@@ -41,7 +51,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 app.get("/register", (req, res) => {
-  const templateVars = { username: undefined };
+  const templateVars = { user: undefined };
   res.render("urls-registration", templateVars);
 });
 //it will display the long url corresponding to the short url parameter that is send via request
@@ -60,7 +70,7 @@ app.get("/urls.json", (req, res) => {
 });
 //index page
 app.post("/urls", (req, res) => {
-  const newShort = generateRandomString();
+  const newShort = generateRandomString(6);
   console.log(req.body); // Log the POST request body to the console
   console.log(newShort);
   urlDatabase[newShort] = req.body.longURL;
@@ -84,16 +94,29 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 //login button is clicked
 app.post("/login", (req, res) => {
   //console.log(req.body.username);
-  const cookieValue = req.body.username;
-  res.cookie("username", cookieValue);
-  console.log(`set cookie to ${cookieValue}`);
+  //const cookieValue = req.body.username;
+  //res.cookie("username", cookieValue);
+  //console.log(`set cookie to ${cookieValue}`);
   res.redirect("/urls");
 });
+//when logout button is clicked
 app.post("/logout", (req, res) => {
   //console.log(req.body.username);
   //const cookieValue = req.body.username;
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   console.log(`reset cookie`);
+  res.redirect("/urls");
+});
+//when submit is clicked from the registration page
+app.post("/register", (req, res) => {
+  console.log(req.body);
+  const password = req.body.password;
+  const email = req.body.email;
+  const id = generateRandomString(8);
+  users[id] = { id, email, password };
+  res.cookie("user_id", id);
+  console.log("new user create:", users);
+  console.log(`set usedid cookie to ${id}`);
   res.redirect("/urls");
 });
 app.listen(PORT, () => console.log(`This server is listening to ${PORT}!`));
