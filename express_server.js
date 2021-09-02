@@ -64,9 +64,20 @@ const passwordValidation = (email, password) => {
   }
   return false;
 };
-function isEmptyObject(obj) {
+const urlsForUser = (id) => {
+  let userURL = {};
+  for (key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      let longURL = urlDatabase[key].longURL;
+      let userID = urlDatabase[key].userID;
+      userURL[key] = { longURL, userID };
+    }
+  }
+  return userURL;
+};
+const isEmptyObject = (obj) => {
   return JSON.stringify(obj) === "{}";
-}
+};
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 //when clik on the link
@@ -77,34 +88,51 @@ app.get("/u/:shortURL", (req, res) => {
 });
 //url index page : directs to the url-index template page
 app.get("/urls", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-  };
+  const templateVars = {};
+  templateVars["error"] = "";
+
   if (isEmptyObject(req.cookies)) {
-    res.redirect("/login");
+    // res.redirect("/login");
+    // return;
+    const error = "The User is not logged in .Please Log in";
+    templateVars["error"] = error;
+    templateVars["user"] = undefined;
+    res.render("urls_login", templateVars);
+    return;
+  } else {
+    const userIdKey = req.cookies["user_id"];
+    templateVars["urls"] = urlsForUser(userIdKey);
+    templateVars["user"] = users[userIdKey];
+    res.render("urls_index", templateVars);
     return;
   }
-  const userIdKey = req.cookies["user_id"];
-  templateVars["user"] = users[userIdKey];
-  res.render("urls_index", templateVars);
 });
 //request to create a new short urlDatabase;
 app.get("/urls/new", (req, res) => {
   const templateVars = {};
+  templateVars["error"] = "";
+
   if (isEmptyObject(req.cookies)) {
-    res.redirect("/login");
+    // res.redirect("/login");
+    // return;
+    const error = "The User is not logged in .Please Log in";
+    templateVars["error"] = error;
+    templateVars["user"] = undefined;
+    res.render("urls_login", templateVars);
+    return;
+  } else {
+    const userIdKey = req.cookies["user_id"];
+    templateVars["user"] = users[userIdKey];
+    res.render("urls_new", templateVars);
     return;
   }
-  const userIdKey = req.cookies["user_id"];
-  templateVars["user"] = users[userIdKey];
-  res.render("urls_new", templateVars);
 });
 app.get("/register", (req, res) => {
-  const templateVars = { user: undefined };
+  const templateVars = { user: undefined, error: "" };
   res.render("urls-registration", templateVars);
 });
 app.get("/login", (req, res) => {
-  const templateVars = { user: undefined };
+  const templateVars = { user: undefined, error: "" };
   res.render("urls_login", templateVars);
 });
 //it will display the long url corresponding to the short url parameter that is send via request
@@ -114,11 +142,22 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: short,
     longURL: urlDatabase[short].longURL,
   };
-  if (!isEmptyObject(req.cookies)) {
+  templateVars["error"] = "";
+
+  if (isEmptyObject(req.cookies)) {
+    // res.redirect("/login");
+    // return;
+    const error = "The User is not logged in .Please Log in";
+    templateVars["error"] = error;
+    templateVars["user"] = undefined;
+    res.render("urls_login", templateVars);
+    return;
+  } else {
     const userIdKey = req.cookies["user_id"];
     templateVars["user"] = users[userIdKey];
+    res.render("urls_show", templateVars);
+    return;
   }
-  res.render("urls_show", templateVars);
 });
 //display the url object
 app.get("/urls.json", (req, res) => {
@@ -135,10 +174,7 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6);
   const longURL = req.body.longURL;
   const userID = req.cookies.user_id;
-  if (isEmptyObject(req.cookies)) {
-    res.redirect("/login");
-    return;
-  }
+
   if (!inputValidation(longURL)) {
     return res.status(400).send("Input field is empty");
   }
