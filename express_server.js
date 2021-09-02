@@ -8,8 +8,14 @@ const PORT = "3000";
 const app = express();
 app.set("view engine", "ejs");
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 const users = {
   userRandomID: {
@@ -52,6 +58,9 @@ const passwordValidation = (email, password) => {
   }
   return false;
 };
+function isEmptyObject(obj) {
+  return JSON.stringify(obj) === "{}";
+}
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.get("/u/:shortURL", (req, res) => {
@@ -61,23 +70,24 @@ app.get("/u/:shortURL", (req, res) => {
 });
 //url index page : directs to the url-index template page
 app.get("/urls", (req, res) => {
-  console.log("cookie:", req.cookies);
   const templateVars = {
     urls: urlDatabase,
   };
-  if (req.cookies) {
-    const userIdKey = req.cookies["user_id"];
-    templateVars["user"] = users[userIdKey];
+  if (isEmptyObject(req.cookies)) {
+    res.redirect("/login");
   }
+  const userIdKey = req.cookies["user_id"];
+  templateVars["user"] = users[userIdKey];
   res.render("urls_index", templateVars);
 });
 //request to create a new short urlDatabase;
 app.get("/urls/new", (req, res) => {
   const templateVars = {};
-  if (req.cookies) {
-    const userIdKey = req.cookies["user_id"];
-    templateVars["user"] = users[userIdKey];
+  if (isEmptyObject(req.cookies)) {
+    res.redirect("/login");
   }
+  const userIdKey = req.cookies["user_id"];
+  templateVars["user"] = users[userIdKey];
   res.render("urls_new", templateVars);
 });
 app.get("/register", (req, res) => {
@@ -91,12 +101,11 @@ app.get("/login", (req, res) => {
 //it will display the long url corresponding to the short url parameter that is send via request
 app.get("/urls/:shortURL", (req, res) => {
   const short = req.params.shortURL;
-
   const templateVars = {
     shortURL: short,
     longURL: urlDatabase[short],
   };
-  if (req.cookies) {
+  if (!isEmptyObject(req.cookies)) {
     const userIdKey = req.cookies["user_id"];
     templateVars["user"] = users[userIdKey];
   }
@@ -114,11 +123,15 @@ app.get("/logout", (req, res) => {
 });
 //index page
 app.post("/urls", (req, res) => {
-  const newShort = generateRandomString(6);
-  console.log(req.body); // Log the POST request body to the console
-  console.log(newShort);
-  urlDatabase[newShort] = req.body.longURL;
-  console.log(`added a new url: ${urlDatabase[newShort]}`);
+  if (isEmptyObject(req.cookies)) {
+    res.redirect("/login");
+  }
+  const shortURL = generateRandomString(6);
+  const longURL = req.body.longURL;
+  const userID = req.cookies.user_id;
+  urlDatabase[shortURL] = { longURL, userID };
+  console.log("the new urldatavas:", urlDatabase);
+  console.log(`added a new url: ${urlDatabase[shortURL]}`);
   res.redirect("/urls");
 });
 //when delete button is clicked
