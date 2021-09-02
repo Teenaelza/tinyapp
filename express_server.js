@@ -90,6 +90,12 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+//when logout link is clicked
+app.get("/logout", (req, res) => {
+  res.clearCookie("user_id");
+  console.log(`reset cookie`);
+  res.redirect("/urls");
+});
 //index page
 app.post("/urls", (req, res) => {
   const newShort = generateRandomString(6);
@@ -121,14 +127,7 @@ app.post("/login", (req, res) => {
   //console.log(`set cookie to ${cookieValue}`);
   res.redirect("/urls");
 });
-//when logout button is clicked
-app.post("/logout", (req, res) => {
-  //console.log(req.body.username);
-  //const cookieValue = req.body.username;
-  res.clearCookie("user_id");
-  console.log(`reset cookie`);
-  res.redirect("/urls");
-});
+
 //when submit is clicked from the registration page
 app.post("/register", (req, res) => {
   console.log(req.body);
