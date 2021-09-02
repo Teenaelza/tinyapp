@@ -40,6 +40,12 @@ const emailValidation = (email, password) => {
   }
   return false;
 };
+const inputValidation = (input) => {
+  if (input.trim()) {
+    return true;
+  }
+  return false;
+};
 //function to check the user already exists
 const userExist = (email) => {
   for (key in users) {
@@ -63,9 +69,10 @@ function isEmptyObject(obj) {
 }
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+//when clik on the link
 app.get("/u/:shortURL", (req, res) => {
   const short = req.params.shortURL;
-  const longURL = urlDatabase[short];
+  const longURL = urlDatabase[short].longURL;
   res.redirect(longURL);
 });
 //url index page : directs to the url-index template page
@@ -75,6 +82,7 @@ app.get("/urls", (req, res) => {
   };
   if (isEmptyObject(req.cookies)) {
     res.redirect("/login");
+    return;
   }
   const userIdKey = req.cookies["user_id"];
   templateVars["user"] = users[userIdKey];
@@ -85,6 +93,7 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {};
   if (isEmptyObject(req.cookies)) {
     res.redirect("/login");
+    return;
   }
   const userIdKey = req.cookies["user_id"];
   templateVars["user"] = users[userIdKey];
@@ -103,7 +112,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const short = req.params.shortURL;
   const templateVars = {
     shortURL: short,
-    longURL: urlDatabase[short],
+    longURL: urlDatabase[short].longURL,
   };
   if (!isEmptyObject(req.cookies)) {
     const userIdKey = req.cookies["user_id"];
@@ -123,12 +132,17 @@ app.get("/logout", (req, res) => {
 });
 //index page
 app.post("/urls", (req, res) => {
-  if (isEmptyObject(req.cookies)) {
-    res.redirect("/login");
-  }
   const shortURL = generateRandomString(6);
   const longURL = req.body.longURL;
   const userID = req.cookies.user_id;
+  if (isEmptyObject(req.cookies)) {
+    res.redirect("/login");
+    return;
+  }
+  if (!inputValidation(longURL)) {
+    return res.status(400).send("Input field is empty");
+  }
+
   urlDatabase[shortURL] = { longURL, userID };
   console.log("the new urldatavas:", urlDatabase);
   console.log(`added a new url: ${urlDatabase[shortURL]}`);
@@ -143,8 +157,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 //edit link is clicked
 app.post("/urls/:shortURL/edit", (req, res) => {
+  const longURL = req.body.longURL;
+  if (!inputValidation(longURL)) {
+    return res.status(400).send("Input field is empty");
+  }
   const short = req.params.shortURL;
-  urlDatabase[short] = req.body.longURL;
+  urlDatabase[short].longURL = longURL;
   console.log(`updated the url ${urlDatabase[short]}`);
   res.redirect("/urls");
 });
