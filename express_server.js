@@ -23,8 +23,26 @@ const users = {
     password: "dishwasher-funk",
   },
 };
+//function to generate a random alpha numerical string of the given length
 const generateRandomString = (length) => {
   return Math.random().toString(36).substr(2, length);
+};
+//function to check whether the email and password is not empty
+const emailValidation = (email, password) => {
+  console.log("email validate");
+  if (email.trim() && password.trim()) {
+    return true;
+  }
+  return false;
+};
+//function to check the user already exists
+const userExist = (email) => {
+  for (let user in users) {
+    if (user.email === email) {
+      return true;
+    }
+    return false;
+  }
 };
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -112,11 +130,18 @@ app.post("/register", (req, res) => {
   console.log(req.body);
   const password = req.body.password;
   const email = req.body.email;
-  const id = generateRandomString(8);
-  users[id] = { id, email, password };
-  res.cookie("user_id", id);
-  console.log("new user create:", users);
-  console.log(`set usedid cookie to ${id}`);
-  res.redirect("/urls");
+  if (!emailValidation(email, password) || userExist(email)) {
+    res.status(400);
+    res.render("error", {
+      error: `400: user already exist! or not a vallid user!`,
+    });
+  } else {
+    const id = generateRandomString(8);
+    users[id] = { id, email, password };
+    res.cookie("user_id", id);
+    console.log("new user create:", users);
+    console.log(`set usedid cookie to ${id}`);
+    res.redirect("/urls");
+  }
 });
 app.listen(PORT, () => console.log(`This server is listening to ${PORT}!`));
