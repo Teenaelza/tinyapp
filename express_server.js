@@ -4,6 +4,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 const PORT = "3000";
 const app = express();
 app.set("view engine", "ejs");
@@ -29,6 +30,7 @@ const users = {
     password: "dishwasher-funk",
   },
 };
+
 //function to generate a random alpha numerical string of the given length
 const generateRandomString = (length) => {
   return Math.random().toString(36).substr(2, length);
@@ -58,7 +60,8 @@ const userExist = (email) => {
 //function to check the user and password are equal
 const passwordValidation = (email, password) => {
   for (user in users) {
-    if (users[user].email === email && users[user].password === password) {
+    const isHashed = bcrypt.compareSync(password, users[user].password);
+    if (users[user].email === email && isHashed) {
       return users[user].id;
     }
   }
@@ -228,7 +231,7 @@ app.post("/login", (req, res) => {
 
 //when submit is clicked from the registration page
 app.post("/register", (req, res) => {
-  console.log(req.body);
+  //console.log(req.body);
   const password = req.body.password;
   const email = req.body.email;
   if (!emailValidation(email, password)) {
@@ -237,8 +240,9 @@ app.post("/register", (req, res) => {
   if (userExist(email)) {
     return res.status(400).send("User already exists");
   }
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString(8);
-  users[id] = { id, email, password };
+  users[id] = { id, email, password: hashedPassword };
   res.cookie("user_id", id);
   console.log("new user create:", users);
   console.log(`set usedid cookie to ${id}`);
