@@ -72,6 +72,10 @@ app.get("/register", (req, res) => {
   const templateVars = { user: undefined };
   res.render("urls-registration", templateVars);
 });
+app.get("/login", (req, res) => {
+  const templateVars = { user: undefined };
+  res.render("urls_login", templateVars);
+});
 //it will display the long url corresponding to the short url parameter that is send via request
 app.get("/urls/:shortURL", (req, res) => {
   const short = req.params.shortURL;
@@ -130,18 +134,22 @@ app.post("/register", (req, res) => {
   console.log(req.body);
   const password = req.body.password;
   const email = req.body.email;
-  if (!emailValidation(email, password) || userExist(email)) {
+  if (!emailValidation(email, password)) {
+    res.status(400);
+    res.render("error", { error: "Email/Password is empty" });
+  }
+  if (userExist) {
     res.status(400);
     res.render("error", {
-      error: `400: user already exist! or not a vallid user!`,
+      error: "User Already Exists",
     });
-  } else {
-    const id = generateRandomString(8);
-    users[id] = { id, email, password };
-    res.cookie("user_id", id);
-    console.log("new user create:", users);
-    console.log(`set usedid cookie to ${id}`);
-    res.redirect("/urls");
   }
+
+  const id = generateRandomString(8);
+  users[id] = { id, email, password };
+  res.cookie("user_id", id);
+  console.log("new user create:", users);
+  console.log(`set usedid cookie to ${id}`);
+  res.redirect("/urls");
 });
 app.listen(PORT, () => console.log(`This server is listening to ${PORT}!`));
