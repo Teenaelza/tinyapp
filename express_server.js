@@ -1,7 +1,7 @@
 /**
  * Seting up the server for the Tiny app project
  */
-const express = require("express");
+
 const {
   UserExists,
   generateRandomString,
@@ -10,12 +10,11 @@ const {
   urlsForUser,
   isEmptyObject,
 } = require("./helpers");
-
+const express = require("express");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const PORT = "3000";
 const app = express();
-
 app.set("view engine", "ejs");
 const urlDatabase = {
   b6UTxQ: {
@@ -39,7 +38,7 @@ const users = {
     password: "dishwasher-funk",
   },
 };
-//function to check the user and password are equal
+//function to check the user and hashedpassword are equal
 const passwordValidation = (email, users, password) => {
   for (user in users) {
     let isHashed = bcrypt.compareSync(password, users[user].password);
@@ -145,16 +144,11 @@ app.post("/logout", (req, res) => {
   console.log(`reset cookie`);
   res.redirect("/urls");
 });
-//index page
+//POST /urls
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6);
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
-
-  // if (!inputValidation(longURL)) {
-  //   return res.status(400).send("Input field is empty");
-  // }
-
   urlDatabase[shortURL] = { longURL, userID };
   console.log("the new urldatavas:", urlDatabase);
   console.log(`added a new url: ${urlDatabase[shortURL]}`);
@@ -200,7 +194,6 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 //POST /login
 app.post("/login", (req, res) => {
-  //console.log(req.body);
   const password = req.body.password;
   const email = req.body.email;
   console.log(users);
@@ -214,7 +207,6 @@ app.post("/login", (req, res) => {
   if (!userid) {
     return res.status(403).send("User and password doesnot match");
   }
-  // res.cookie("user_id", userid);
   req.session.user_id = userid;
   console.log(`set usedid cookie to ${userid}`);
 
@@ -224,7 +216,6 @@ app.post("/login", (req, res) => {
 
 //POST /register
 app.post("/register", (req, res) => {
-  //console.log(req.body);
   const password = req.body.password;
   const email = req.body.email;
   if (!emailValidation(email, password)) {
@@ -236,7 +227,6 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString(8);
   users[id] = { id, email, password: hashedPassword };
-  //res.cookie("user_id", id);
   req.session.user_id = id;
   console.log("new user create:", users);
   console.log("set user_id session");
