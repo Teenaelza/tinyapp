@@ -3,7 +3,7 @@
  */
 const express = require("express");
 const {
-  getUserByEmail,
+  UserExists,
   generateRandomString,
   emailValidation,
   inputValidation,
@@ -93,15 +93,21 @@ app.get("/urls/new", (req, res) => {
   templateVars["user"] = users[userIdKey];
   res.render("urls_new", templateVars);
 });
-//loginpage
+//GET /login
 app.get("/login", (req, res) => {
   const templateVars = { user: undefined };
   res.render("urls_login", templateVars);
 });
-//when clik on the link
+//GET /u/:id
+
 app.get("/u/:shortURL", (req, res) => {
+  const userIdKey = req.session.user_id;
   const short = req.params.shortURL;
-  const longURL = urlDatabase[short].longURL;
+  const userURLS = urlsForUser(userIdKey, urlDatabase);
+  if (isEmptyObject(userURLS) || !userURLS || !userURLS[short]) {
+    return res.status(400).send("There is no URL for the given ID");
+  }
+  const longURL = userURLS[short].longURL;
   res.redirect(longURL);
 });
 
@@ -132,15 +138,10 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
   return;
 });
-//display the url object
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
 
-//when logout link is clicked
-app.get("/logout", (req, res) => {
-  // res.clearCookie("sesson");
-  req.session.user_id = null;
+//POST /logout
+app.post("/logout", (req, res) => {
+  res.clearCookie("session");
   console.log(`reset cookie`);
   res.redirect("/urls");
 });
@@ -150,43 +151,63 @@ app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
 
-  if (!inputValidation(longURL)) {
-    return res.status(400).send("Input field is empty");
-  }
+  // if (!inputValidation(longURL)) {
+  //   return res.status(400).send("Input field is empty");
+  // }
 
   urlDatabase[shortURL] = { longURL, userID };
   console.log("the new urldatavas:", urlDatabase);
   console.log(`added a new url: ${urlDatabase[shortURL]}`);
   res.redirect("/urls");
 });
-//when delete button is clicked
+//POST /urls/:id/delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   const short = req.params.shortURL;
+  const userIdKey = req.session.user_id;
+  const userURLS = urlsForUser(userIdKey, urlDatabase);
+  if (isEmptyObject(userIdKey) || !userIdKey) {
+    return res
+      .status(400)
+      .send(`The User is not logged in .Please <a  href="/login">Log in</a>`);
+  }
+  if (isEmptyObject(userURLS) || !userURLS || !userURLS[short]) {
+    return res.status(400).send("There is no URL for the given ID");
+  }
   delete urlDatabase[short];
   console.log(`deleted the url ${short}`);
   res.redirect("/urls");
 });
-//edit link is clicked
-app.post("/urls/:shortURL/edit", (req, res) => {
+//POST /urls/:id
+app.post("/urls/:shortURL", (req, res) => {
   const longURL = req.body.longURL;
+  const short = req.params.shortURL;
+  const userIdKey = req.session.user_id;
+  const userURLS = urlsForUser(userIdKey, urlDatabase);
+  if (isEmptyObject(userIdKey) || !userIdKey) {
+    return res
+      .status(400)
+      .send(`The User is not logged in .Please <a  href="/login">Log in</a>`);
+  }
+  if (isEmptyObject(userURLS) || !userURLS || !userURLS[short]) {
+    return res.status(400).send("There is no URL for the given ID");
+  }
   if (!inputValidation(longURL)) {
     return res.status(400).send("Input field is empty");
   }
-  const short = req.params.shortURL;
   urlDatabase[short].longURL = longURL;
   console.log(`updated the url ${urlDatabase[short]}`);
   res.redirect("/urls");
 });
-//login button is clicked
+//POST /login
 app.post("/login", (req, res) => {
-  console.log(req.body);
+  //console.log(req.body);
   const password = req.body.password;
   const email = req.body.email;
   console.log(users);
   if (!emailValidation(email, password)) {
     return res.status(400).send("Email/Password is empty");
   }
-  if (!getUserByEmail(email, users)) {
+  if (!UserExists(email, users)) {
     return res.status(403).send("User with the emailid not Found");
   }
   const userid = passwordValidation(email, users, password);
@@ -201,7 +222,7 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-//when submit is clicked from the registration page
+//POST /register
 app.post("/register", (req, res) => {
   //console.log(req.body);
   const password = req.body.password;
@@ -209,7 +230,7 @@ app.post("/register", (req, res) => {
   if (!emailValidation(email, password)) {
     return res.status(400).send("Email/Password is empty");
   }
-  if (getUserByEmail(email, users)) {
+  if (UserExists(email, users)) {
     return res.status(400).send("User already exists");
   }
   const hashedPassword = bcrypt.hashSync(password, 10);

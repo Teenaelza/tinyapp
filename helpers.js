@@ -3,7 +3,7 @@
  */
 
 //function to check the user already exists
-const getUserByEmail = (email, userDatabase) => {
+const UserExists = (email, userDatabase) => {
   for (key in userDatabase) {
     if (userDatabase[key].email === email) {
       return true;
@@ -49,7 +49,7 @@ const isEmptyObject = (obj) => {
   return JSON.stringify(obj) === "{}";
 };
 module.exports = {
-  getUserByEmail,
+  UserExists,
   generateRandomString,
   emailValidation,
   inputValidation,

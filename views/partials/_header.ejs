@@ -17,8 +17,10 @@
         <% if(user){%>
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        Logged in As : <%= user.email %>&nbsp&nbsp
-        <a class="nav-item nav-link" href="/logout">Log Out</a>
+        <form class="form-inline" action="/logout" method="POST">
+          Logged in As : <%= user.email %>&nbsp&nbsp
+          <button type="submit" class="btn-success">Logout</button>
+        </form>
 
         <% } else {%>
 
