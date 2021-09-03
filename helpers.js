@@ -24,15 +24,7 @@ const emailValidation = (email, password) => {
   }
   return false;
 };
-//function to check the user and password are equal
-const passwordValidation = (email, users, isHashed) => {
-  for (user in users) {
-    if (users[user].email === email && isHashed) {
-      return users[user].id;
-    }
-  }
-  return false;
-};
+
 //function to check for empty input values.
 const inputValidation = (input) => {
   if (input.trim()) {
@@ -60,7 +52,6 @@ module.exports = {
   getUserByEmail,
   generateRandomString,
   emailValidation,
-  passwordValidation,
   inputValidation,
   urlsForUser,
   isEmptyObject,
