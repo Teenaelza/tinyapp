@@ -6,7 +6,6 @@ const {
   getUserByEmail,
   generateRandomString,
   emailValidation,
-  passwordValidation,
   inputValidation,
   urlsForUser,
   isEmptyObject,
@@ -40,7 +39,16 @@ const users = {
     password: "dishwasher-funk",
   },
 };
-
+//function to check the user and password are equal
+const passwordValidation = (email, users, password) => {
+  for (user in users) {
+    let isHashed = bcrypt.compareSync(password, users[user].password);
+    if (users[user].email === email && isHashed) {
+      return users[user].id;
+    }
+  }
+  return false;
+};
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cookieSession({
@@ -52,10 +60,10 @@ app.use(
 app.get("/", (req, res) => {
   const sessionId = req.session.user_id;
   if (isEmptyObject(sessionId) || !sessionId) {
-    res.redirect("/urls");
+    res.redirect("/login");
     return;
   }
-  res.redirect("/login");
+  res.redirect("/urls");
 });
 
 //GET /urls
@@ -76,6 +84,7 @@ app.get("/urls", (req, res) => {
 //GET /urls/new
 app.get("/urls/new", (req, res) => {
   const templateVars = {};
+  const sessionId = req.session.user_id;
   if (isEmptyObject(sessionId) || !sessionId) {
     res.redirect("/login");
     return;
@@ -101,29 +110,27 @@ app.get("/register", (req, res) => {
   res.render("urls-registration", templateVars);
 });
 
-//it will display the long url corresponding to the short url parameter that is send via request
+//GET /urls/:id
 app.get("/urls/:shortURL", (req, res) => {
   const short = req.params.shortURL;
+  const userIdKey = req.session.user_id;
+  const userURLS = urlsForUser(userIdKey, urlDatabase);
+  if (isEmptyObject(userIdKey) || !userIdKey) {
+    return res
+      .status(400)
+      .send(`The User is not logged in .Please <a  href="/login">Log in</a>`);
+  }
+  if (isEmptyObject(userURLS) || !userURLS || !userURLS[short]) {
+    return res.status(400).send("There is no URL for the given ID");
+  }
+
   const templateVars = {
     shortURL: short,
-    longURL: urlDatabase[short].longURL,
+    longURL: userURLS[short].longURL,
   };
-  templateVars["error"] = "";
-
-  if (isEmptyObject(req.session.user_id)) {
-    // res.redirect("/login");
-    // return;
-    const error = "The User is not logged in .Please Log in";
-    templateVars["error"] = error;
-    templateVars["user"] = undefined;
-    res.render("urls_login", templateVars);
-    return;
-  } else {
-    const userIdKey = req.session.user_id;
-    templateVars["user"] = users[userIdKey];
-    res.render("urls_show", templateVars);
-    return;
-  }
+  templateVars["user"] = users[userIdKey];
+  res.render("urls_show", templateVars);
+  return;
 });
 //display the url object
 app.get("/urls.json", (req, res) => {
@@ -182,8 +189,7 @@ app.post("/login", (req, res) => {
   if (!getUserByEmail(email, users)) {
     return res.status(403).send("User with the emailid not Found");
   }
-  const isHashed = bcrypt.compareSync(password, users[user].password);
-  const userid = passwordValidation(email, users, isHashed);
+  const userid = passwordValidation(email, users, password);
   if (!userid) {
     return res.status(403).send("User and password doesnot match");
   }
