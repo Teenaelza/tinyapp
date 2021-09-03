@@ -11,10 +11,12 @@ const {
   urlsForUser,
   isEmptyObject,
 } = require("./helpers");
+
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const PORT = "3000";
 const app = express();
+
 app.set("view engine", "ejs");
 const urlDatabase = {
   b6UTxQ: {
@@ -46,63 +48,59 @@ app.use(
     keys: ["key1"],
   })
 );
+// GET /
+app.get("/", (req, res) => {
+  const sessionId = req.session.user_id;
+  if (isEmptyObject(sessionId) || !sessionId) {
+    res.redirect("/urls");
+    return;
+  }
+  res.redirect("/login");
+});
 
-// app.use(cookieParser());
+//GET /urls
+app.get("/urls", (req, res) => {
+  const templateVars = {};
+  // templateVars["error"] = "";
+  const sessionId = req.session.user_id;
+  if (isEmptyObject(sessionId) || !sessionId) {
+    return res
+      .status(400)
+      .send(`The User is not logged in .Please <a  href="/login">Log in</a>`);
+  }
+  const userIdKey = req.session.user_id;
+  templateVars["urls"] = urlsForUser(userIdKey, urlDatabase);
+  templateVars["user"] = users[userIdKey];
+  res.render("urls_index", templateVars);
+});
+//GET /urls/new
+app.get("/urls/new", (req, res) => {
+  const templateVars = {};
+  if (isEmptyObject(sessionId) || !sessionId) {
+    res.redirect("/login");
+    return;
+  }
+  const userIdKey = req.session.user_id;
+  templateVars["user"] = users[userIdKey];
+  res.render("urls_new", templateVars);
+});
+//loginpage
+app.get("/login", (req, res) => {
+  const templateVars = { user: undefined };
+  res.render("urls_login", templateVars);
+});
 //when clik on the link
 app.get("/u/:shortURL", (req, res) => {
   const short = req.params.shortURL;
   const longURL = urlDatabase[short].longURL;
   res.redirect(longURL);
 });
-//url index page : directs to the url-index template page
-app.get("/urls", (req, res) => {
-  const templateVars = {};
-  templateVars["error"] = "";
 
-  if (isEmptyObject(req.session.user_id)) {
-    // res.redirect("/login");
-    // return;
-    const error = "The User is not logged in .Please Log in";
-    templateVars["error"] = error;
-    templateVars["user"] = undefined;
-    res.render("urls_login", templateVars);
-    return;
-  } else {
-    const userIdKey = req.session.user_id;
-    templateVars["urls"] = urlsForUser(userIdKey, urlDatabase);
-    templateVars["user"] = users[userIdKey];
-    res.render("urls_index", templateVars);
-    return;
-  }
-});
-//request to create a new short urlDatabase;
-app.get("/urls/new", (req, res) => {
-  const templateVars = {};
-  templateVars["error"] = "";
-
-  if (isEmptyObject(req.session.user_id)) {
-    // res.redirect("/login");
-    // return;
-    const error = "The User is not logged in .Please Log in";
-    templateVars["error"] = error;
-    templateVars["user"] = undefined;
-    res.render("urls_login", templateVars);
-    return;
-  } else {
-    const userIdKey = req.session.user_id;
-    templateVars["user"] = users[userIdKey];
-    res.render("urls_new", templateVars);
-    return;
-  }
-});
 app.get("/register", (req, res) => {
   const templateVars = { user: undefined, error: "" };
   res.render("urls-registration", templateVars);
 });
-app.get("/login", (req, res) => {
-  const templateVars = { user: undefined, error: "" };
-  res.render("urls_login", templateVars);
-});
+
 //it will display the long url corresponding to the short url parameter that is send via request
 app.get("/urls/:shortURL", (req, res) => {
   const short = req.params.shortURL;
@@ -131,9 +129,10 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+
 //when logout link is clicked
 app.get("/logout", (req, res) => {
-  // res.clearCookie("user_id");
+  // res.clearCookie("sesson");
   req.session.user_id = null;
   console.log(`reset cookie`);
   res.redirect("/urls");
