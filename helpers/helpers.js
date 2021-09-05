@@ -1,6 +1,7 @@
 /**
  * Seting up the helperfunctions for the Tiny app project
  */
+const bcrypt = require("bcryptjs");
 
 //function to check the user already exists
 const UserExists = (email, userDatabase) => {
@@ -24,7 +25,16 @@ const emailValidation = (email, password) => {
   }
   return false;
 };
-
+//function to check the user and hashedpassword are equal
+const passwordValidation = (email, users, password) => {
+  for (user in users) {
+    let isHashed = bcrypt.compareSync(password, users[user].password);
+    if (users[user].email === email && isHashed) {
+      return users[user].id;
+    }
+  }
+  return false;
+};
 //function to check for empty input values.
 const inputValidation = (input) => {
   if (input.trim()) {
@@ -55,4 +65,5 @@ module.exports = {
   inputValidation,
   urlsForUser,
   isEmptyObject,
+  passwordValidation,
 };
