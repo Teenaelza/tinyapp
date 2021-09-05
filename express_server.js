@@ -9,7 +9,7 @@ const {
   inputValidation,
   urlsForUser,
   isEmptyObject,
-} = require("./helpers");
+} = require("./helpers/helpers");
 const express = require("express");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
@@ -120,6 +120,8 @@ app.get("/urls/:shortURL", (req, res) => {
   const short = req.params.shortURL;
   const userIdKey = req.session.user_id;
   const userURLS = urlsForUser(userIdKey, urlDatabase);
+  console.log(short);
+  console.log("the user for  url is :", userURLS, userURLS[short]);
   if (isEmptyObject(userIdKey) || !userIdKey) {
     return res
       .status(400)
@@ -150,9 +152,9 @@ app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
   urlDatabase[shortURL] = { longURL, userID };
-  console.log("the new urldatavas:", urlDatabase);
-  console.log(`added a new url: ${urlDatabase[shortURL]}`);
-  res.redirect("/urls");
+  console.log("the new urldatabase:", urlDatabase);
+  console.log("added a new url: ", urlDatabase[shortURL]);
+  res.redirect(`/urls/${shortURL}`);
 });
 //POST /urls/:id/delete
 app.post("/urls/:shortURL/delete", (req, res) => {
